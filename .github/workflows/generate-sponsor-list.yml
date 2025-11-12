@@ -12,10 +12,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Generate JSON list of sponsors
+      - name: Generate JSON list of sponsors with RAWR first
         run: |
+          # Define RAWR logo filename
+          RAWR="RAWR.png"
+
+          # Start JSON array
           echo "[" > sponsors.json
-          find assets -type f -printf '  "%f",\n' | sed '$ s/,$//' >> sponsors.json
+
+          # Add RAWR first
+          echo "  \"$RAWR\"," >> sponsors.json
+
+          # Find all other files in assets, remove RAWR if it exists
+          find assets -type f | sed 's|.*/||' | grep -v "^$RAWR$" | sort | awk '{print "  \""$0"\","}' | sed '$ s/,$//' >> sponsors.json
+
+          # Close JSON array
           echo "]" >> sponsors.json
 
       - name: Commit and push updated JSON
