@@ -1,0 +1,27 @@
+name: Generate Sponsor List
+
+on:
+  push:
+    paths:
+      - "assets/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate JSON list of sponsors
+        run: |
+          echo "[" > sponsors.json
+          find assets -type f -printf '  "%f",\n' | sed '$ s/,$//' >> sponsors.json
+          echo "]" >> sponsors.json
+
+      - name: Commit and push updated JSON
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add sponsors.json
+          git commit -m "Auto-update sponsors.json" || echo "No changes to commit"
+          git push
