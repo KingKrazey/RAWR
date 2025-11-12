@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>RAWR Sponsor BS</title>
+<title>RAWR Sponsors Browser Source</title>
 <style>
     html, body {
         margin: 0;
@@ -14,11 +14,25 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-direction: column;
         position: relative;
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+        text-shadow: 0 0 10px rgba(0,0,0,0.8);
+    }
+
+    #container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
     }
 
     img {
-        width: 80%;
+        width: 70%;
         height: auto;
         object-fit: contain;
         opacity: 0;
@@ -30,43 +44,73 @@
         opacity: 1;
     }
 
-    /* Optional: add fade background or border */
-    #container {
-        position: relative;
+    #sponsorName {
+        position: absolute;
+        bottom: 5%;
+        font-size: 2em;
+        text-align: center;
         width: 100%;
-        height: 100%;
+        opacity: 0;
+        transition: opacity 1s ease-in-out;
+    }
+
+    #sponsorName.visible {
+        opacity: 1;
     }
 </style>
 </head>
 <body>
 <div id="container">
-    <img id="sponsor1" src="./assets/sponsor1.png" alt="Sponsor 1">
-    <img id="sponsor2" src="./assets/sponsor2.png" alt="Sponsor 2">
+    <div id="sponsorName"></div>
 </div>
 
 <script>
-    const images = [
-        document.getElementById("sponsor1"),
-        document.getElementById("sponsor2")
-    ];
+const displayTime = 15000; // 15 seconds
+const assetsPath = './assets/';
+const sponsorName = document.getElementById('sponsorName');
+const container = document.getElementById('container');
 
-    let currentIndex = 0;
-    const displayTime = 20000; // 20 seconds
+async function loadSponsors() {
+    try {
+        const response = await fetch('./sponsors.json?_=' + Date.now());
+        const sponsorFiles = await response.json();
 
-    function showImage(index) {
-        images.forEach((img, i) => {
-            img.classList.toggle('visible', i === index);
+        const images = sponsorFiles.map(filename => {
+            const img = document.createElement('img');
+            img.src = assetsPath + filename;
+            img.alt = filename;
+            container.appendChild(img);
+            return img;
         });
-    }
 
-    function nextImage() {
-        currentIndex = (currentIndex + 1) % images.length;
+        const sponsorNames = sponsorFiles.map(f => f.replace(/\.[^/.]+$/, ''));
+        let currentIndex = 0;
+
+        function showImage(index) {
+            images.forEach((img, i) => {
+                img.classList.toggle('visible', i === index);
+            });
+            sponsorName.textContent = sponsorNames[index];
+            sponsorName.classList.add('visible');
+        }
+
+        function nextImage() {
+            sponsorName.classList.remove('visible');
+            setTimeout(() => {
+                currentIndex = (currentIndex + 1) % images.length;
+                showImage(currentIndex);
+            }, 1000);
+        }
+
         showImage(currentIndex);
+        setInterval(nextImage, displayTime);
+    } catch (error) {
+        console.error('Error loading sponsors.json:', error);
+        sponsorName.textContent = "Error loading sponsors.";
     }
+}
 
-    // Start
-    showImage(currentIndex);
-    setInterval(nextImage, displayTime);
+loadSponsors();
 </script>
 </body>
 </html>
