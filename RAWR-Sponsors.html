@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <title>RAWR Sponsors Browser Source</title>
+
 <style>
+    /* Reset margins, make background transparent for OBS */
     html, body {
         margin: 0;
         padding: 0;
@@ -21,6 +23,7 @@
         text-shadow: 0 0 10px rgba(0,0,0,0.8);
     }
 
+    /* This is the main wrapper for all content */
     #container {
         position: relative;
         width: 100%;
@@ -31,85 +34,83 @@
         flex-direction: column;
     }
 
+    /* Style for each sponsor logo */
     img {
-        width: 70%;
+        width: 70%; /* logo size relative to browser source */
         height: auto;
         object-fit: contain;
-        opacity: 0;
-        transition: opacity 1s ease-in-out;
-        position: absolute;
+        opacity: 0; /* start hidden */
+        transition: opacity 1s ease-in-out; /* smooth fade */
+        position: absolute; /* stack images */
     }
 
+    /* Makes the current image visible */
     .visible {
         opacity: 1;
     }
-
-    #sponsorName {
-        position: absolute;
-        bottom: 5%;
-        font-size: 2em;
-        text-align: center;
-        width: 100%;
-        opacity: 0;
-        transition: opacity 1s ease-in-out;
-    }
-
-    #sponsorName.visible {
-        opacity: 1;
-    }
+    
 </style>
 </head>
 <body>
+
+<!-- Main container for the sponsor rotation -->
 <div id="container">
-    <div id="sponsorName"></div>
-</div>
 
 <script>
-const displayTime = 15000; // 15 seconds
-const assetsPath = './assets/';
-const sponsorName = document.getElementById('sponsorName');
-const container = document.getElementById('container');
+/* Time each sponsor stays on screen (in ms) */
+const displayTime = 5000; // 15 seconds
 
+/* Folder where logos are stored */
+const assetsPath = './assets/';
+
+/* Get references to elements */
+const container = document.getElementById('container');
+const loading = document.getElementById('loading');
+
+/* Load sponsor images and start the slideshow */
 async function loadSponsors() {
     try {
+        // Get the JSON list of sponsor image filenames
         const response = await fetch('./sponsors.json?_=' + Date.now());
         const sponsorFiles = await response.json();
 
+        // Create an <img> element for each sponsor logo
         const images = sponsorFiles.map(filename => {
             const img = document.createElement('img');
-            img.src = assetsPath + filename;
-            img.alt = filename;
+            img.src = assetsPath + filename; // path to the logo
+            img.alt = ''; // no alt text to keep it clean
             container.appendChild(img);
             return img;
         });
 
-        const sponsorNames = sponsorFiles.map(f => f.replace(/\.[^/.]+$/, ''));
-        let currentIndex = 0;
+        let currentIndex = 0; // start at first sponsor
 
+        // Show a specific image by index
         function showImage(index) {
             images.forEach((img, i) => {
                 img.classList.toggle('visible', i === index);
             });
-            sponsorName.textContent = sponsorNames[index];
-            sponsorName.classList.add('visible');
         }
 
+        // Move to the next image (loops when reaching the end)
         function nextImage() {
-            sponsorName.classList.remove('visible');
-            setTimeout(() => {
-                currentIndex = (currentIndex + 1) % images.length;
-                showImage(currentIndex);
-            }, 1000);
+            currentIndex = (currentIndex + 1) % images.length;
+            showImage(currentIndex);
         }
 
+        // Hide loading text and show first sponsor
+        loading.classList.add('hidden');
         showImage(currentIndex);
+
+        // Rotate through sponsors automatically
         setInterval(nextImage, displayTime);
     } catch (error) {
         console.error('Error loading sponsors.json:', error);
-        sponsorName.textContent = "Error loading sponsors.";
+        loading.textContent = "Error loading sponsors.";
     }
 }
 
+/* Start loading everything */
 loadSponsors();
 </script>
 </body>
